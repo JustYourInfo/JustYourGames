@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 2 - Number Guessing Game</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .game-container {
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .game-input {
+            width: 50px;
+            font-size: 1.2em;
+            margin: 10px;
+            text-align: center;
+        }
+
+        .game-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .game-button:hover {
+            background-color: #2980b9;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Number Guessing Game</h1>
+
+    <div class="game-container">
+        <p>Guess a number between 1 and 100:</p>
+        <input type="number" id="guessInput" class="game-input" min="1" max="100">
+        <button class="game-button" onclick="checkGuess()">Submit Guess</button>
+
+        <div class="message" id="message"></div>
+    </div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        const randomNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+
+        function checkGuess() {
+            const userGuess = document.getElementById('guessInput').value;
+            const message = document.getElementById('message');
+            attempts++;
+
+            if (userGuess == randomNumber) {
+                message.textContent = `Congratulations! You guessed the correct number in ${attempts} attempts.`;
+                message.style.color = 'green';
+            } else if (userGuess > randomNumber) {
+                message.textContent = 'Too high! Try again.';
+                message.style.color = 'red';
+            } else {
+                message.textContent = 'Too low! Try again.';
+                message.style.color = 'red';
+            }
+        }
+    </script>
+
+</body>
+</html>
 
