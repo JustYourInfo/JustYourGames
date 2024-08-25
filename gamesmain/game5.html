@@ -1,1 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 5 - Advanced Maze Game</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .maze-container {
+            margin: 50px auto;
+            width: 320px;
+            height: 320px;
+            background-color: #f4f4f4;
+            border: 2px solid #000;
+            position: relative;
+        }
+
+        .wall {
+            position: absolute;
+            background-color: #000;
+        }
+
+        .player {
+            width: 20px;
+            height: 20px;
+            background-color: #3498db;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+        }
+
+        .exit {
+            width: 20px;
+            height: 20px;
+            background-color: #2ecc71;
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .enemy {
+            width: 20px;
+            height: 20px;
+            background-color: #e74c3c;
+            position: absolute;
+            border-radius: 50%;
+            animation: patrol 2s infinite alternate;
+        }
+
+        .result, .score, .timer {
+            margin-top: 20px;
+            font-size: 1.5em;
+            height: 40px;
+        }
+
+        .score, .timer {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes patrol {
+            0% { top: 80px; left: 40px; }
+            100% { top: 80px; left: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Advanced Maze Game</h1>
+
+    <div class="maze-container" id="maze">
+        <div class="player" id="player"></div>
+        <div class="exit" id="exit"></div>
+        <!-- Add walls to the maze -->
+        <div class="wall" style="top: 40px; left: 0; width: 300px; height: 20px;"></div>
+        <div class="wall" style="top: 0; left: 40px; width: 20px; height: 200px;"></div>
+        <div class="wall" style="top: 120px; left: 60px; width: 200px; height: 20px;"></div>
+        <div class="wall" style="top: 160px; left: 160px; width: 20px; height: 160px;"></div>
+        <div class="wall" style="top: 280px; left: 80px; width: 240px; height: 20px;"></div>
+        <div class="wall" style="top: 80px; left: 240px; width: 20px; height: 80px;"></div>
+        <!-- Enemy patrol -->
+        <div class="enemy" id="enemy1"></div>
+    </div>
+
+    <div class="result" id="result"></div>
+    <div class="score" id="score">Score: 0</div>
+    <div class="timer" id="timer">Time: 30</div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        let playerPosition = { top: 0, left: 0 };
+        let score = 0;
+        let timeLeft = 30;
+        let currentLevel = 1;
+        let interval;
+
+        const player = document.getElementById('player');
+        const maze = document.getElementById('maze');
+        const result = document.getElementById('result');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const exit = document.getElementById('exit');
+        const walls = Array.from(document.getElementsByClassName('wall'));
+        const enemy = document.getElementById('enemy1');
+
+        setExitPosition();
+        document.addEventListener('keydown', movePlayer);
+        startTimer();
+
+        function startTimer() {
+            interval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    endGame('Time\'s up! You Lose!');
+                }
+            }, 1000);
+        }
+
+        function setExitPosition() {
+            exit.style.top = `${300 - (currentLevel - 1) * 40}px`;
+            exit.style.left = `${300 - (currentLevel - 1) * 40}px`;
+        }
+
+        function movePlayer(event) {
+            const key = event.key;
+            let newPosition = { ...playerPosition };
+
+            switch (key) {
+                case 'ArrowUp':
+                case 'w':
+                    newPosition.top -= 20;
+                    break;
+                case 'ArrowDown':
+                case 's':
+                    newPosition.top += 20;
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                    newPosition.left -= 20;
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                    newPosition.left += 20;
+                    break;
+            }
+
+            if (canMove(newPosition)) {
+                playerPosition = newPosition;
+                updatePlayerPosition();
+                checkCollision();
+                checkWin();
+            }
+        }
+
+        function canMove(position) {
+            const withinBounds = position.top >= 0 && position.top <= 300 && position.left >= 0 && position.left <= 300;
+
+            if (!withinBounds) return false;
+
+            const playerRect = {
+                top: position.top,
+                left: position.left,
+                right: position.left + 20,
+                bottom: position.top + 20
+            };
+
+            for (const wall of walls) {
+                const wallRect = wall.getBoundingClientRect();
+                const mazeRect = maze.getBoundingClientRect();
+
+                const adjustedWallRect = {
+                    top: wallRect.top - mazeRect.top,
+                    left: wallRect.left - mazeRect.left,
+                    right: wallRect.left - mazeRect.left + wallRect.width,
+                    bottom: wallRect.top - mazeRect.top + wallRect.height
+                };
+
+                if (playerRect.right > adjustedWallRect.left &&
+                    playerRect.left < adjustedWallRect.right &&
+                    playerRect.bottom > adjustedWallRect.top &&
+                    playerRect.top < adjustedWallRect.bottom) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function updatePlayerPosition() {
+            player.style.top = `${playerPosition.top}px`;
+            player.style.left = `${playerPosition.left}px`;
+        }
+
+        function checkCollision() {
+            const playerRect = player.getBoundingClientRect();
+            const enemyRect = enemy.getBoundingClientRect();
+
+            if (playerRect.left < enemyRect.left + enemyRect.width &&
+                playerRect.left + playerRect.width > enemyRect.left &&
+                playerRect.top < enemyRect.top + enemyRect.height &&
+                playerRect.height + playerRect.top > enemyRect.top) {
+                endGame('You were caught by an enemy! You Lose!');
+            }
+        }
+
+        function checkWin() {
+            if (playerPosition.top === parseInt(exit.style.top) &&
+                playerPosition.left === parseInt(exit.style.left)) {
+                score += timeLeft;
+                scoreDisplay.textContent = `Score: ${score}`;
+                result.textContent = '🎉 Level Completed! 🎉';
+                result.style.color = 'green';
+                nextLevel();
+            }
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            resetPlayerPosition();
+            setExitPosition();
+            updateEnemySpeed();
+            timeLeft = 30 - (currentLevel - 1) * 2;
+            timerDisplay.textContent = `Time: ${timeLeft}`;
+        }
+
+        function updateEnemySpeed() {
+            enemy.style.animationDuration = `${2 - currentLevel * 0.2}s`;
+        }
+
+        function resetPlayerPosition() {
+            playerPosition = { top: 0, left: 0 };
+            updatePlayerPosition();
+        }
+
+        function endGame(message) {
+            clearInterval(interval);
+            document.removeEventListener('keydown', movePlayer);
+            result.textContent = message;
+            result.style.color = 'red';
+        }
+    </script>
+
+</body>
+</html>
 
