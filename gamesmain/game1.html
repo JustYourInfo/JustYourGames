@@ -3,58 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game 1</title>
+    <title>Game 1 - Click the Target</title>
+    <link rel="stylesheet" href="../static/styles.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            margin-top: 50px;
-            font-size: 3em;
-        }
         .game-container {
-            margin: 50px auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 80%;
-            max-width: 600px;
+            position: relative;
+            height: 400px;
+            background-color: #e9ecef;
+            overflow: hidden;
         }
-        p {
-            font-size: 1.2em;
-            margin: 20px 0;
+
+        .target {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s ease;
         }
-        .back-link {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 10px 20px;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-        .back-link:hover {
-            background-color: #2980b9;
+
+        .score {
+            margin-top: 20px;
+            font-size: 1.5em;
         }
     </style>
 </head>
 <body>
 
-    <h1>Game 1</h1>
+    <h1>Click the Target!</h1>
 
     <div class="game-container">
-        <p>Welcome to Game 1! This is where the game content will go.</p>
-        <p>Feel free to replace this text with your actual game code, instructions, or embedded game.</p>
-
-        <a href="../index.html" class="back-link">Back to Game Hub</a>
+        <div class="target" id="target"></div>
     </div>
+
+    <div class="score">
+        Score: <span id="score">0</span>
+    </div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        const target = document.getElementById('target');
+        const scoreElement = document.getElementById('score');
+        let score = 0;
+
+        function moveTarget() {
+            const gameContainer = document.querySelector('.game-container');
+            const x = Math.random() * (gameContainer.clientWidth - target.clientWidth);
+            const y = Math.random() * (gameContainer.clientHeight - target.clientHeight);
+            target.style.transform = `translate(${x}px, ${y}px)`;
+        }
+
+        target.addEventListener('click', () => {
+            score++;
+            scoreElement.textContent = score;
+            moveTarget();
+        });
+
+        moveTarget();
+    </script>
 
 </body>
 </html>
-
