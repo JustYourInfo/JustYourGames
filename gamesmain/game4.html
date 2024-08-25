@@ -1,1 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 4 - Slot Machine</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .game-container {
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .reels {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .reel {
+            width: 100px;
+            height: 100px;
+            background-color: #f1f1f1;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            margin: 0 10px;
+        }
+
+        .spin-button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .spin-button:hover {
+            background-color: #2980b9;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5em;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Slot Machine</h1>
+
+    <div class="game-container">
+        <div class="reels">
+            <div class="reel" id="reel1">🍒</div>
+            <div class="reel" id="reel2">🍋</div>
+            <div class="reel" id="reel3">🍉</div>
+        </div>
+
+        <button class="spin-button" onclick="spin()">Spin</button>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        const symbols = ['🍒', '🍋', '🍉', '🍇', '🍊', '🔔', '⭐'];
+
+        function getRandomSymbol() {
+            return symbols[Math.floor(Math.random() * symbols.length)];
+        }
+
+        function spin() {
+            const reel1 = document.getElementById('reel1');
+            const reel2 = document.getElementById('reel2');
+            const reel3 = document.getElementById('reel3');
+            const result = document.getElementById('result');
+
+            reel1.textContent = getRandomSymbol();
+            reel2.textContent = getRandomSymbol();
+            reel3.textContent = getRandomSymbol();
+
+            if (reel1.textContent === reel2.textContent && reel2.textContent === reel3.textContent) {
+                result.textContent = '🎉 You win! 🎉';
+                result.style.color = 'green';
+            } else {
+                result.textContent = '😢 Try again! 😢';
+                result.style.color = 'red';
+            }
+        }
+    </script>
+
+</body>
+</html>
 
