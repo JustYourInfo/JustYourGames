@@ -1,1 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 3 - Rock, Paper, Scissors</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .game-container {
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .game-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+
+        .game-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100px;
+        }
+
+        .game-button:hover {
+            background-color: #2980b9;
+        }
+
+        .score {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Rock, Paper, Scissors</h1>
+
+    <div class="game-container">
+        <p>Choose your move:</p>
+        <div class="game-buttons">
+            <button class="game-button" onclick="playGame('rock')">Rock</button>
+            <button class="game-button" onclick="playGame('paper')">Paper</button>
+            <button class="game-button" onclick="playGame('scissors')">Scissors</button>
+        </div>
+
+        <div class="result" id="result"></div>
+
+        <div class="score">
+            <p>Your Score: <span id="userScore">0</span></p>
+            <p>Computer's Score: <span id="computerScore">0</span></p>
+        </div>
+    </div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        let userScore = 0;
+        let computerScore = 0;
+
+        function playGame(userChoice) {
+            const computerChoice = getComputerChoice();
+            const result = determineWinner(userChoice, computerChoice);
+            updateScore(result);
+            displayResult(userChoice, computerChoice, result);
+        }
+
+        function getComputerChoice() {
+            const choices = ['rock', 'paper', 'scissors'];
+            const randomIndex = Math.floor(Math.random() * 3);
+            return choices[randomIndex];
+        }
+
+        function determineWinner(userChoice, computerChoice) {
+            if (userChoice === computerChoice) {
+                return 'draw';
+            } else if (
+                (userChoice === 'rock' && computerChoice === 'scissors') ||
+                (userChoice === 'paper' && computerChoice === 'rock') ||
+                (userChoice === 'scissors' && computerChoice === 'paper')
+            ) {
+                return 'user';
+            } else {
+                return 'computer';
+            }
+        }
+
+        function updateScore(result) {
+            if (result === 'user') {
+                userScore++;
+            } else if (result === 'computer') {
+                computerScore++;
+            }
+            document.getElementById('userScore').textContent = userScore;
+            document.getElementById('computerScore').textContent = computerScore;
+        }
+
+        function displayResult(userChoice, computerChoice, result) {
+            const resultElement = document.getElementById('result');
+            if (result === 'draw') {
+                resultElement.textContent = `It's a draw! You both chose ${userChoice}.`;
+                resultElement.style.color = 'orange';
+            } else if (result === 'user') {
+                resultElement.textContent = `You win! ${userChoice.charAt(0).toUpperCase() + userChoice.slice(1)} beats ${computerChoice}.`;
+                resultElement.style.color = 'green';
+            } else {
+                resultElement.textContent = `You lose! ${computerChoice.charAt(0).toUpperCase() + computerChoice.slice(1)} beats ${userChoice}.`;
+                resultElement.style.color = 'red';
+            }
+        }
+    </script>
+
+</body>
+</html>
 
