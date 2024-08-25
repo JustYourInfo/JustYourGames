@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 11 - Trivia Game</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .question-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .question {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .answers {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .answer {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .answer:hover {
+            background-color: #2980b9;
+        }
+
+        .score {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+
+        .restart-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .restart-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Trivia Game</h1>
+
+    <div class="question-container" id="question-container">
+        <div class="question" id="question">Loading question...</div>
+        <div class="answers" id="answers"></div>
+    </div>
+
+    <div class="score" id="score"></div>
+    <button class="restart-btn" id="restart-btn" onclick="restartGame()">Restart Game</button>
+
+    <script>
+        const questions = [
+            {
+                question: "What is the capital of France?",
+                answers: ["Berlin", "Madrid", "Paris", "Rome"],
+                correct: "Paris"
+            },
+            {
+                question: "Who wrote 'Hamlet'?",
+                answers: ["Charles Dickens", "William Shakespeare", "Leo Tolstoy", "Mark Twain"],
+                correct: "William Shakespeare"
+            },
+            {
+                question: "What is the smallest planet in our solar system?",
+                answers: ["Venus", "Mars", "Mercury", "Earth"],
+                correct: "Mercury"
+            },
+            {
+                question: "What is the square root of 64?",
+                answers: ["6", "7", "8", "9"],
+                correct: "8"
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                answers: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Claude Monet"],
+                correct: "Leonardo da Vinci"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionContainer = document.getElementById('question-container');
+        const questionElement = document.getElementById('question');
+        const answersElement = document.getElementById('answers');
+        const scoreElement = document.getElementById('score');
+        const restartBtn = document.getElementById('restart-btn');
+
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            questionElement.textContent = currentQuestion.question;
+            answersElement.innerHTML = '';
+
+            currentQuestion.answers.forEach(answer => {
+                const answerButton = document.createElement('button');
+                answerButton.classList.add('answer');
+                answerButton.textContent = answer;
+                answerButton.addEventListener('click', () => handleAnswerClick(answer));
+                answersElement.appendChild(answerButton);
+            });
+        }
+
+        function handleAnswerClick(answer) {
+            if (answer === questions[currentQuestionIndex].correct) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            questionContainer.style.display = 'none';
+            scoreElement.textContent = `Your score: ${score} out of ${questions.length}`;
+            scoreElement.style.display = 'block';
+            restartBtn.style.display = 'block';
+        }
+
+        function restartGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            questionContainer.style.display = 'block';
+            scoreElement.style.display = 'none';
+            restartBtn.style.display = 'none';
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
