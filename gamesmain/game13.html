@@ -3,119 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game 13 - Platformer Game</title>
+    <title>Game 16 - Minesweeper</title>
     <link rel="stylesheet" href="../static/styles.css">
     <style>
         body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             margin: 0;
-            overflow: hidden;
-            background-color: #87CEEB;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin-bottom: 20px;
         }
 
         .game-container {
-            position: relative;
-            width: 800px;
-            height: 400px;
-            margin: 50px auto;
-            background-color: #87CEEB;
-            border: 2px solid #000;
-            overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(10, 30px);
+            grid-template-rows: repeat(10, 30px);
+            gap: 2px;
         }
 
-        .player {
-            position: absolute;
-            width: 50px;
-            height: 50px;
+        .cell {
+            width: 30px;
+            height: 30px;
             background-color: #3498db;
-            bottom: 0;
-            left: 50px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1em;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s ease;
         }
 
-        .platform {
-            position: absolute;
-            background-color: #2ecc71;
-            height: 20px;
+        .cell.revealed {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            cursor: default;
         }
 
-        .platform1 {
-            width: 150px;
-            bottom: 100px;
-            left: 100px;
+        .cell.mine {
+            background-color: #e74c3c;
+            color: #c0392b;
         }
 
-        .platform2 {
-            width: 200px;
-            bottom: 200px;
-            left: 300px;
+        .restart-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
 
-        .platform3 {
-            width: 100px;
-            bottom: 300px;
-            left: 600px;
+        .restart-btn:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
 <body>
 
-    <div class="game-container" id="game-container">
-        <div class="player" id="player"></div>
-        <div class="platform platform1"></div>
-        <div class="platform platform2"></div>
-        <div class="platform platform3"></div>
-    </div>
+    <h1>Minesweeper</h1>
+
+    <div class="game-container" id="game-container"></div>
+
+    <button class="restart-btn" onclick="restartGame()">Restart Game</button>
 
     <script>
-        const player = document.getElementById('player');
+        const gridSize = 10;
+        const mineCount = 10;
+        let grid = [];
+        let gameOver = false;
+
         const gameContainer = document.getElementById('game-container');
-        const gravity = 0.5;
-        const jumpStrength = 10;
-        let isJumping = false;
-        let velocity = 0;
 
-        document.addEventListener('keydown', (event) => {
-            if (event.code === 'Space' && !isJumping) {
-                isJumping = true;
-                velocity = -jumpStrength;
-            }
-        });
+        function createGrid() {
+            grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill({
+                mine: false,
+                revealed: false,
+                adjacentMines: 0
+            }));
 
-        function gameLoop() {
-            velocity += gravity;
-            player.style.bottom = `${parseFloat(player.style.bottom) + velocity}px`;
-
-            if (parseFloat(player.style.bottom) <= 0) {
-                player.style.bottom = '0px';
-                isJumping = false;
-            }
-
-            checkPlatformCollision();
-
-            requestAnimationFrame(gameLoop);
+            placeMines();
+            calculateAdjacentMines();
+            renderGrid();
         }
 
-        function checkPlatformCollision() {
-            const platforms = document.querySelectorAll('.platform');
-
-            platforms.forEach(platform => {
-                const platformRect = platform.getBoundingClientRect();
-                const playerRect = player.getBoundingClientRect();
-
-                if (
-                    playerRect.bottom >= platformRect.top &&
-                    playerRect.top <= platformRect.bottom &&
-                    playerRect.right >= platformRect.left &&
-                    playerRect.left <= platformRect.right &&
-                    !isJumping
-                ) {
-                    player.style.bottom = `${gameContainer.clientHeight - platformRect.top}px`;
-                    velocity = 0;
-                    isJumping = false;
+        function placeMines() {
+            let minesPlaced = 0;
+            while (minesPlaced < mineCount) {
+                const row = Math.floor(Math.random() * gridSize);
+                const col = Math.floor(Math.random() * gridSize);
+                if (!grid[row][col].mine) {
+                    grid[row][col] = { ...grid[row][col], mine: true };
+                    minesPlaced++;
                 }
-            });
+            }
         }
 
-        gameLoop();
+        function calculateAdjacentMines() {
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    if (grid[row][col].mine) continue;
+
+                    let adjacentMines = 0;
+                    for (let r = -1; r <= 1; r++) {
+                        for (let c = -1; c <= 1; c++) {
+                            if (r === 0 && c === 0) continue;
+                            const newRow = row + r;
+                            const newCol = col + c;
+                            if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize && grid[newRow][newCol].mine) {
+                                adjacentMines++;
+                            }
+                        }
+                    }
+                    grid[row][col] = { ...grid[row][col], adjacentMines };
+                }
+            }
+        }
+
+        function renderGrid() {
+            gameContainer.innerHTML = '';
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+
+                    if (grid[row][col].revealed) {
+                        cell.classList.add('revealed');
+                        if (grid[row][col].mine) {
+                            cell.classList.add('mine');
+                            cell.textContent = '💣';
+                        } else if (grid[row][col].adjacentMines > 0) {
+                            cell.textContent = grid[row][col].adjacentMines;
+                        }
+                    }
+
+                    cell.addEventListener('click', () => handleCellClick(row, col));
+                    gameContainer.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(row, col) {
+            if (gameOver || grid[row][col].revealed) return;
+
+            grid[row][col].revealed = true;
+
+            if (grid[row][col].mine) {
+                revealMines();
+                alert('Game Over! You clicked on a mine!');
+                gameOver = true;
+            } else if (grid[row][col].adjacentMines === 0) {
+                revealAdjacentCells(row, col);
+            }
+
+            renderGrid();
+            checkWin();
+        }
+
+        function revealMines() {
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    if (grid[row][col].mine) {
+                        grid[row][col].revealed = true;
+                    }
+                }
+            }
+        }
+
+        function revealAdjacentCells(row, col) {
+            for (let r = -1; r <= 1; r++) {
+                for (let c = -1; c <= 1; c++) {
+                    const newRow = row + r;
+                    const newCol = col + c;
+                    if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize && !grid[newRow][newCol].revealed) {
+                        grid[newRow][newCol].revealed = true;
+                        if (grid[newRow][newCol].adjacentMines === 0) {
+                            revealAdjacentCells(newRow, newCol);
+                        }
+                    }
+                }
+            }
+        }
+
+        function checkWin() {
+            let revealedCells = 0;
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    if (grid[row][col].revealed) {
+                        revealedCells++;
+                    }
+                }
+            }
+            if (revealedCells === gridSize * gridSize - mineCount) {
+                alert('Congratulations! You cleared the minefield!');
+                gameOver = true;
+            }
+        }
+
+        function restartGame() {
+            gameOver = false;
+            createGrid();
+        }
+
+        createGrid();
     </script>
 
 </body>
