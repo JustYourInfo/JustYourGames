@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 13 - Platformer Game</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #87CEEB;
+        }
+
+        .game-container {
+            position: relative;
+            width: 800px;
+            height: 400px;
+            margin: 50px auto;
+            background-color: #87CEEB;
+            border: 2px solid #000;
+            overflow: hidden;
+        }
+
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #3498db;
+            bottom: 0;
+            left: 50px;
+        }
+
+        .platform {
+            position: absolute;
+            background-color: #2ecc71;
+            height: 20px;
+        }
+
+        .platform1 {
+            width: 150px;
+            bottom: 100px;
+            left: 100px;
+        }
+
+        .platform2 {
+            width: 200px;
+            bottom: 200px;
+            left: 300px;
+        }
+
+        .platform3 {
+            width: 100px;
+            bottom: 300px;
+            left: 600px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="game-container">
+        <div class="player" id="player"></div>
+        <div class="platform platform1"></div>
+        <div class="platform platform2"></div>
+        <div class="platform platform3"></div>
+    </div>
+
+    <script>
+        const player = document.getElementById('player');
+        const gameContainer = document.getElementById('game-container');
+        const gravity = 0.5;
+        const jumpStrength = 10;
+        let isJumping = false;
+        let velocity = 0;
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && !isJumping) {
+                isJumping = true;
+                velocity = -jumpStrength;
+            }
+        });
+
+        function gameLoop() {
+            velocity += gravity;
+            player.style.bottom = `${parseFloat(player.style.bottom) + velocity}px`;
+
+            if (parseFloat(player.style.bottom) <= 0) {
+                player.style.bottom = '0px';
+                isJumping = false;
+            }
+
+            checkPlatformCollision();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function checkPlatformCollision() {
+            const platforms = document.querySelectorAll('.platform');
+
+            platforms.forEach(platform => {
+                const platformRect = platform.getBoundingClientRect();
+                const playerRect = player.getBoundingClientRect();
+
+                if (
+                    playerRect.bottom >= platformRect.top &&
+                    playerRect.top <= platformRect.bottom &&
+                    playerRect.right >= platformRect.left &&
+                    playerRect.left <= platformRect.right &&
+                    !isJumping
+                ) {
+                    player.style.bottom = `${gameContainer.clientHeight - platformRect.top}px`;
+                    velocity = 0;
+                    isJumping = false;
+                }
+            });
+        }
+
+        gameLoop();
+    </script>
+
+</body>
+</html>
