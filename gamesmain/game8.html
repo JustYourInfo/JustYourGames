@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 8 - Math Quiz Game</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .game-container {
+            margin: 50px auto;
+            width: 400px;
+            text-align: center;
+            background-color: #f4f4f4;
+            border: 2px solid #000;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .problem {
+            font-size: 2em;
+            margin: 20px 0;
+        }
+
+        .input {
+            font-size: 1.5em;
+            padding: 5px;
+            width: 100px;
+            text-align: center;
+        }
+
+        .timer, .score {
+            font-size: 1.5em;
+            margin-top: 20px;
+        }
+
+        .submit-button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            margin-top: 20px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #2980b9;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.5em;
+            color: green;
+        }
+
+        .wrong-message {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Math Quiz Game</h1>
+
+    <div class="game-container">
+        <div class="problem" id="problem"></div>
+        <input type="number" id="answer" class="input" placeholder="Answer" />
+        <button class="submit-button" onclick="checkAnswer()">Submit</button>
+
+        <div class="timer" id="timer">Time Left: 30s</div>
+        <div class="score" id="score">Score: 0</div>
+        <div class="message" id="message"></div>
+    </div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        let score = 0;
+        let timeLeft = 30;
+        let timer;
+        let currentProblem;
+
+        document.getElementById('answer').focus();
+
+        function generateProblem() {
+            const num1 = Math.floor(Math.random() * 10 + 1);
+            const num2 = Math.floor(Math.random() * 10 + 1);
+            const operatorIndex = Math.floor(Math.random() * 3);
+            const operators = ['+', '-', '*'];
+            const operator = operators[operatorIndex];
+
+            const problem = `${num1} ${operator} ${num2}`;
+            const answer = eval(problem);
+
+            return { problem, answer };
+        }
+
+        function displayProblem() {
+            currentProblem = generateProblem();
+            document.getElementById('problem').textContent = currentProblem.problem;
+            document.getElementById('answer').value = '';
+            document.getElementById('message').textContent = '';
+        }
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `Time Left: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function checkAnswer() {
+            const userAnswer = parseInt(document.getElementById('answer').value);
+
+            if (userAnswer === currentProblem.answer) {
+                score += 10;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                document.getElementById('message').textContent = 'Correct!';
+                displayProblem();
+            } else {
+                document.getElementById('message').textContent = 'Wrong answer. Try again!';
+                document.getElementById('message').classList.add('wrong-message');
+            }
+        }
+
+        function endGame() {
+            document.getElementById('message').textContent = `Time's up! Your final score is ${score}.`;
+            document.getElementById('problem').textContent = '';
+            document.getElementById('answer').disabled = true;
+            document.querySelector('.submit-button').disabled = true;
+        }
+
+        function initGame() {
+            displayProblem();
+            startTimer();
+        }
+
+        initGame();
+    </script>
+
+</body>
+</html>
