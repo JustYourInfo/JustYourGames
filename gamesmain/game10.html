@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Game 10 - Tower Defense</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        body {
+            background-color: #333;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .game-container {
+            margin: 20px auto;
+            width: 600px;
+            height: 400px;
+            background-color: #222;
+            position: relative;
+            border: 2px solid #fff;
+        }
+
+        .tower, .enemy, .bullet {
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        .tower {
+            width: 30px;
+            height: 30px;
+            background-color: #3498db;
+        }
+
+        .enemy {
+            width: 30px;
+            height: 30px;
+            background-color: #e74c3c;
+        }
+
+        .bullet {
+            width: 5px;
+            height: 5px;
+            background-color: #f1c40f;
+        }
+
+        .hud {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        .hud button {
+            padding: 10px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .hud button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Advanced Tower Defense</h1>
+
+    <div class="game-container" id="game-container"></div>
+
+    <div class="hud">
+        <div id="health">Health: 100</div>
+        <div id="gold">Gold: 100</div>
+        <div id="level">Level: 1</div>
+        <button onclick="placeTower()">Place Tower</button>
+    </div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        let health = 100;
+        let gold = 100;
+        let level = 1;
+        let towers = [];
+        let enemies = [];
+        let bullets = [];
+        let gameInterval;
+
+        function startGame() {
+            gameInterval = setInterval(gameLoop, 50);
+            spawnEnemy();
+        }
+
+        function gameLoop() {
+            moveEnemies();
+            moveBullets();
+            checkCollisions();
+            updateHUD();
+            if (health <= 0) {
+                endGame();
+            }
+        }
+
+        function placeTower() {
+            if (gold >= 50) {
+                const tower = document.createElement('div');
+                tower.classList.add('tower');
+                tower.style.left = `${Math.random() * (gameContainer.clientWidth - 30)}px`;
+                tower.style.top = `${Math.random() * (gameContainer.clientHeight - 30)}px`;
+                gameContainer.appendChild(tower);
+                towers.push(tower);
+                gold -= 50;
+            }
+        }
+
+        function spawnEnemy() {
+            const enemy = document.createElement('div');
+            enemy.classList.add('enemy');
+            enemy.style.left = '0px';
+            enemy.style.top = `${Math.random() * (gameContainer.clientHeight - 30)}px`;
+            gameContainer.appendChild(enemy);
+            enemies.push({ element: enemy, health: 100 });
+            setTimeout(spawnEnemy, Math.random() * 2000 / level + 1000);
+        }
+
+        function moveEnemies() {
+            enemies.forEach((enemy, index) => {
+                const enemyElement = enemy.element;
+                enemyElement.style.left = `${parseInt(enemyElement.style.left) + 2 + level}px`;
+                if (parseInt(enemyElement.style.left) > gameContainer.clientWidth) {
+                    health -= 10;
+                    enemyElement.remove();
+                    enemies.splice(index, 1);
+                }
+            });
+        }
+
+        function shootBullet(tower, enemy) {
+            const bullet = document.createElement('div');
+            bullet.classList.add('bullet');
+            bullet.style.left = tower.style.left;
+            bullet.style.top = tower.style.top;
+            gameContainer.appendChild(bullet);
+            bullets.push({ element: bullet, target: enemy });
+        }
+
+        function moveBullets() {
+            bullets.forEach((bullet, index) => {
+                const bulletElement = bullet.element;
+                const target = bullet.target.element;
+                const dx = parseInt(target.style.left) - parseInt(bulletElement.style.left);
+                const dy = parseInt(target.style.top) - parseInt(bulletElement.style.top);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                bulletElement.style.left = `${parseInt(bulletElement.style.left) + (dx / distance) * 5}px`;
+                bulletElement.style.top = `${parseInt(bulletElement.style.top) + (dy / distance) * 5}px`;
+
+                if (distance < 5) {
+                    bulletElement.remove();
+                    bullets.splice(index, 1);
+                }
+            });
+        }
+
+        function checkCollisions() {
+            bullets.forEach((bullet, bulletIndex) => {
+                enemies.forEach((enemy, enemyIndex) => {
+                    if (isCollision(bullet.element, enemy.element)) {
+                        bullet.element.remove();
+                        bullets.splice(bulletIndex, 1);
+                        enemy.health -= 25;
+                        if (enemy.health <= 0) {
+                            enemy.element.remove();
+                            enemies.splice(enemyIndex, 1);
+                            gold += 20;
+                            if (enemies.length === 0) {
+                                levelUp();
+                            }
+                        }
+                    }
+                });
+            });
+
+            towers.forEach(tower => {
+                enemies.forEach(enemy => {
+                    if (Math.random() < 0.05) {
+                        shootBullet(tower, enemy);
+                    }
+                });
+            });
+        }
+
+        function isCollision(bullet, enemy) {
+            const bulletRect = bullet.getBoundingClientRect();
+            const enemyRect = enemy.getBoundingClientRect();
+
+            return (
+                bulletRect.left < enemyRect.left + enemyRect.width &&
+                bulletRect.left + bulletRect.width > enemyRect.left &&
+                bulletRect.top < enemyRect.top + enemyRect.height &&
+                bulletRect.height + bulletRect.top > enemyRect.top
+            );
+        }
+
+        function updateHUD() {
+            document.getElementById('health').textContent = `Health: ${health}`;
+            document.getElementById('gold').textContent = `Gold: ${gold}`;
+            document.getElementById('level').textContent = `Level: ${level}`;
+        }
+
+        function levelUp() {
+            level++;
+            spawnEnemy();
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            alert(`Game Over! You reached level ${level}`);
+        }
+
+        startGame();
+    </script>
+
+</body>
+</html>
