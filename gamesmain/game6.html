@@ -1,1 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game 6 - Advanced Shooting Game</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <style>
+        .game-container {
+            margin: 50px auto;
+            width: 600px;
+            height: 400px;
+            background-color: #f4f4f4;
+            border: 2px solid #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player {
+            width: 40px;
+            height: 40px;
+            background-color: #3498db;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50%;
+        }
+
+        .bullet {
+            width: 5px;
+            height: 10px;
+            background-color: #e74c3c;
+            position: absolute;
+            border-radius: 2px;
+        }
+
+        .enemy {
+            width: 40px;
+            height: 40px;
+            background-color: #2ecc71;
+            position: absolute;
+            border-radius: 50%;
+            animation: moveEnemy 4s linear infinite;
+        }
+
+        @keyframes moveEnemy {
+            0% { top: -40px; }
+            100% { top: 440px; }
+        }
+
+        .score, .health {
+            margin-top: 20px;
+            font-size: 1.5em;
+            height: 40px;
+        }
+
+        .score {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .health {
+            display: inline-block;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Advanced Shooting Game</h1>
+
+    <div class="game-container" id="game-container">
+        <div class="player" id="player"></div>
+    </div>
+
+    <div class="score" id="score">Score: 0</div>
+    <div class="health" id="health">Health: 100%</div>
+
+    <a href="../index.html" class="back-link">Back to Game Hub</a>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const player = document.getElementById('player');
+        const scoreDisplay = document.getElementById('score');
+        const healthDisplay = document.getElementById('health');
+
+        let playerPosition = { left: gameContainer.clientWidth / 2 - 20, bottom: 10 };
+        let bullets = [];
+        let enemies = [];
+        let score = 0;
+        let health = 100;
+
+        document.addEventListener('keydown', handleKeyDown);
+
+        function handleKeyDown(event) {
+            const key = event.key;
+            if (key === 'ArrowLeft' || key === 'a') {
+                movePlayer(-20);
+            } else if (key === 'ArrowRight' || key === 'd') {
+                movePlayer(20);
+            } else if (key === ' ') {
+                shoot();
+            }
+        }
+
+        function movePlayer(direction) {
+            playerPosition.left += direction;
+            if (playerPosition.left < 0) playerPosition.left = 0;
+            if (playerPosition.left > gameContainer.clientWidth - player.clientWidth) {
+                playerPosition.left = gameContainer.clientWidth - player.clientWidth;
+            }
+            updatePlayerPosition();
+        }
+
+        function updatePlayerPosition() {
+            player.style.left = `${playerPosition.left}px`;
+        }
+
+        function shoot() {
+            const bullet = document.createElement('div');
+            bullet.classList.add('bullet');
+            bullet.style.left = `${playerPosition.left + player.clientWidth / 2 - 2.5}px`;
+            bullet.style.bottom = `${playerPosition.bottom + 40}px`;
+            gameContainer.appendChild(bullet);
+            bullets.push(bullet);
+        }
+
+        function createEnemy() {
+            const enemy = document.createElement('div');
+            enemy.classList.add('enemy');
+            const randomLeft = Math.floor(Math.random() * (gameContainer.clientWidth - 40));
+            enemy.style.left = `${randomLeft}px`;
+            gameContainer.appendChild(enemy);
+            enemies.push(enemy);
+        }
+
+        function updateBullets() {
+            bullets.forEach((bullet, index) => {
+                bullet.style.bottom = `${parseInt(bullet.style.bottom) + 10}px`;
+                if (parseInt(bullet.style.bottom) > gameContainer.clientHeight) {
+                    bullet.remove();
+                    bullets.splice(index, 1);
+                } else {
+                    enemies.forEach((enemy, enemyIndex) => {
+                        if (isCollision(bullet, enemy)) {
+                            score += 10;
+                            scoreDisplay.textContent = `Score: ${score}`;
+                            bullet.remove();
+                            enemy.remove();
+                            bullets.splice(index, 1);
+                            enemies.splice(enemyIndex, 1);
+                        }
+                    });
+                }
+            });
+        }
+
+        function updateEnemies() {
+            enemies.forEach((enemy, index) => {
+                enemy.style.top = `${parseInt(enemy.style.top) + 2}px`;
+                if (parseInt(enemy.style.top) > gameContainer.clientHeight) {
+                    enemy.remove();
+                    enemies.splice(index, 1);
+                    health -= 20;
+                    healthDisplay.textContent = `Health: ${health}%`;
+                    if (health <= 0) {
+                        endGame();
+                    }
+                }
+            });
+        }
+
+        function isCollision(bullet, enemy) {
+            const bulletRect = bullet.getBoundingClientRect();
+            const enemyRect = enemy.getBoundingClientRect();
+
+            return (
+                bulletRect.left < enemyRect.left + enemyRect.width &&
+                bulletRect.left + bulletRect.width > enemyRect.left &&
+                bulletRect.top < enemyRect.top + enemyRect.height &&
+                bulletRect.height + bulletRect.top > enemyRect.top
+            );
+        }
+
+        function endGame() {
+            alert('Game Over! Final Score: ' + score);
+            window.location.reload();
+        }
+
+        function gameLoop() {
+            updateBullets();
+            updateEnemies();
+
+            if (Math.random() < 0.02) {
+                createEnemy();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+
+</body>
+</html>
 
