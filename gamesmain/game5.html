@@ -3,245 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game 5 - Advanced Maze Game</title>
+    <title>Game 5 - Flappy Bird</title>
     <link rel="stylesheet" href="../static/styles.css">
     <style>
-        .maze-container {
-            margin: 50px auto;
-            width: 320px;
-            height: 320px;
-            background-color: #f4f4f4;
-            border: 2px solid #000;
+        body {
+            margin: 0;
+            background-color: #70c5ce;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
             position: relative;
+            width: 400px;
+            height: 600px;
+            background-color: #4ec0ca;
+            border: 2px solid #000;
+            overflow: hidden;
         }
 
-        .wall {
+        .bird {
             position: absolute;
-            background-color: #000;
-        }
-
-        .player {
-            width: 20px;
-            height: 20px;
-            background-color: #3498db;
-            position: absolute;
-            top: 0;
-            left: 0;
-            border-radius: 50%;
-        }
-
-        .exit {
-            width: 20px;
-            height: 20px;
-            background-color: #2ecc71;
-            position: absolute;
-            border-radius: 50%;
-        }
-
-        .enemy {
-            width: 20px;
-            height: 20px;
-            background-color: #e74c3c;
-            position: absolute;
-            border-radius: 50%;
-            animation: patrol 2s infinite alternate;
-        }
-
-        .result, .score, .timer {
-            margin-top: 20px;
-            font-size: 1.5em;
+            width: 40px;
             height: 40px;
+            background-color: #f39c12;
+            border-radius: 50%;
+            top: 200px;
+            left: 50px;
         }
 
-        .score, .timer {
-            display: inline-block;
-            margin-right: 10px;
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background-color: #2ecc71;
         }
 
-        @keyframes patrol {
-            0% { top: 80px; left: 40px; }
-            100% { top: 80px; left: 200px; }
+        .score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: red;
+            text-align: center;
+        }
+
+        .restart-btn {
+            display: none;
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 24px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .restart-btn:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
 <body>
 
-    <h1>Advanced Maze Game</h1>
-
-    <div class="maze-container" id="maze">
-        <div class="player" id="player"></div>
-        <div class="exit" id="exit"></div>
-        <!-- Add walls to the maze -->
-        <div class="wall" style="top: 40px; left: 0; width: 300px; height: 20px;"></div>
-        <div class="wall" style="top: 0; left: 40px; width: 20px; height: 200px;"></div>
-        <div class="wall" style="top: 120px; left: 60px; width: 200px; height: 20px;"></div>
-        <div class="wall" style="top: 160px; left: 160px; width: 20px; height: 160px;"></div>
-        <div class="wall" style="top: 280px; left: 80px; width: 240px; height: 20px;"></div>
-        <div class="wall" style="top: 80px; left: 240px; width: 20px; height: 80px;"></div>
-        <!-- Enemy patrol -->
-        <div class="enemy" id="enemy1"></div>
+    <div class="game-container" id="game-container">
+        <div class="bird" id="bird"></div>
+        <div class="score" id="score">Score: 0</div>
+        <div class="game-over" id="game-over">Game Over</div>
+        <button class="restart-btn" id="restart-btn" onclick="restartGame()">Restart</button>
     </div>
 
-    <div class="result" id="result"></div>
-    <div class="score" id="score">Score: 0</div>
-    <div class="timer" id="timer">Time: 30</div>
-
-    <a href="../index.html" class="back-link">Back to Game Hub</a>
-
     <script>
-        let playerPosition = { top: 0, left: 0 };
-        let score = 0;
-        let timeLeft = 30;
-        let currentLevel = 1;
-        let interval;
-
-        const player = document.getElementById('player');
-        const maze = document.getElementById('maze');
-        const result = document.getElementById('result');
+        const gameContainer = document.getElementById('game-container');
+        const bird = document.getElementById('bird');
         const scoreDisplay = document.getElementById('score');
-        const timerDisplay = document.getElementById('timer');
-        const exit = document.getElementById('exit');
-        const walls = Array.from(document.getElementsByClassName('wall'));
-        const enemy = document.getElementById('enemy1');
+        const gameOverDisplay = document.getElementById('game-over');
+        const restartBtn = document.getElementById('restart-btn');
 
-        setExitPosition();
-        document.addEventListener('keydown', movePlayer);
-        startTimer();
+        let birdPosition = 200;
+        let gravity = 2;
+        let isGameOver = false;
+        let score = 0;
+        let pipes = [];
+        let pipeSpeed = 2;
 
-        function startTimer() {
-            interval = setInterval(() => {
-                timeLeft--;
-                timerDisplay.textContent = `Time: ${timeLeft}`;
-                if (timeLeft <= 0) {
-                    endGame('Time\'s up! You Lose!');
+        document.addEventListener('keydown', fly);
+
+        function startGame() {
+            pipes = [];
+            score = 0;
+            birdPosition = 200;
+            gravity = 2;
+            isGameOver = false;
+            gameOverDisplay.style.display = 'none';
+            restartBtn.style.display = 'none';
+            scoreDisplay.textContent = 'Score: 0';
+
+            createPipe();
+            gameLoop();
+        }
+
+        function gameLoop() {
+            if (isGameOver) return;
+
+            birdPosition += gravity;
+            bird.style.top = `${birdPosition}px`;
+
+            pipes.forEach((pipe, index) => {
+                pipe.style.left = `${parseInt(pipe.style.left) - pipeSpeed}px`;
+                if (parseInt(pipe.style.left) < -60) {
+                    pipe.remove();
+                    pipes.splice(index, 1);
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    createPipe();
                 }
-            }, 1000);
-        }
-
-        function setExitPosition() {
-            exit.style.top = `${300 - (currentLevel - 1) * 40}px`;
-            exit.style.left = `${300 - (currentLevel - 1) * 40}px`;
-        }
-
-        function movePlayer(event) {
-            const key = event.key;
-            let newPosition = { ...playerPosition };
-
-            switch (key) {
-                case 'ArrowUp':
-                case 'w':
-                    newPosition.top -= 20;
-                    break;
-                case 'ArrowDown':
-                case 's':
-                    newPosition.top += 20;
-                    break;
-                case 'ArrowLeft':
-                case 'a':
-                    newPosition.left -= 20;
-                    break;
-                case 'ArrowRight':
-                case 'd':
-                    newPosition.left += 20;
-                    break;
-            }
-
-            if (canMove(newPosition)) {
-                playerPosition = newPosition;
-                updatePlayerPosition();
-                checkCollision();
-                checkWin();
-            }
-        }
-
-        function canMove(position) {
-            const withinBounds = position.top >= 0 && position.top <= 300 && position.left >= 0 && position.left <= 300;
-
-            if (!withinBounds) return false;
-
-            const playerRect = {
-                top: position.top,
-                left: position.left,
-                right: position.left + 20,
-                bottom: position.top + 20
-            };
-
-            for (const wall of walls) {
-                const wallRect = wall.getBoundingClientRect();
-                const mazeRect = maze.getBoundingClientRect();
-
-                const adjustedWallRect = {
-                    top: wallRect.top - mazeRect.top,
-                    left: wallRect.left - mazeRect.left,
-                    right: wallRect.left - mazeRect.left + wallRect.width,
-                    bottom: wallRect.top - mazeRect.top + wallRect.height
-                };
-
-                if (playerRect.right > adjustedWallRect.left &&
-                    playerRect.left < adjustedWallRect.right &&
-                    playerRect.bottom > adjustedWallRect.top &&
-                    playerRect.top < adjustedWallRect.bottom) {
-                    return false;
+                if (isCollision(pipe, bird)) {
+                    endGame();
                 }
+            });
+
+            if (birdPosition < 0 || birdPosition > gameContainer.clientHeight - bird.clientHeight) {
+                endGame();
             }
 
-            return true;
+            requestAnimationFrame(gameLoop);
         }
 
-        function updatePlayerPosition() {
-            player.style.top = `${playerPosition.top}px`;
-            player.style.left = `${playerPosition.left}px`;
+        function fly() {
+            if (isGameOver) return;
+            birdPosition -= 40;
         }
 
-        function checkCollision() {
-            const playerRect = player.getBoundingClientRect();
-            const enemyRect = enemy.getBoundingClientRect();
+        function createPipe() {
+            const pipeHeight = Math.floor(Math.random() * 200) + 50;
+            const pipeGap = 150;
 
-            if (playerRect.left < enemyRect.left + enemyRect.width &&
-                playerRect.left + playerRect.width > enemyRect.left &&
-                playerRect.top < enemyRect.top + enemyRect.height &&
-                playerRect.height + playerRect.top > enemyRect.top) {
-                endGame('You were caught by an enemy! You Lose!');
-            }
+            const topPipe = document.createElement('div');
+            topPipe.classList.add('pipe');
+            topPipe.style.height = `${pipeHeight}px`;
+            topPipe.style.left = '400px';
+            topPipe.style.top = '0px';
+            gameContainer.appendChild(topPipe);
+            pipes.push(topPipe);
+
+            const bottomPipe = document.createElement('div');
+            bottomPipe.classList.add('pipe');
+            bottomPipe.style.height = `${400 - pipeHeight - pipeGap}px`;
+            bottomPipe.style.left = '400px';
+            bottomPipe.style.bottom = '0px';
+            gameContainer.appendChild(bottomPipe);
+            pipes.push(bottomPipe);
         }
 
-        function checkWin() {
-            if (playerPosition.top === parseInt(exit.style.top) &&
-                playerPosition.left === parseInt(exit.style.left)) {
-                score += timeLeft;
-                scoreDisplay.textContent = `Score: ${score}`;
-                result.textContent = '🎉 Level Completed! 🎉';
-                result.style.color = 'green';
-                nextLevel();
-            }
+        function isCollision(pipe, bird) {
+            const birdRect = bird.getBoundingClientRect();
+            const pipeRect = pipe.getBoundingClientRect();
+
+            return (
+                birdRect.left < pipeRect.left + pipeRect.width &&
+                birdRect.left + birdRect.width > pipeRect.left &&
+                birdRect.top < pipeRect.top + pipeRect.height &&
+                birdRect.top + birdRect.height > pipeRect.top
+            );
         }
 
-        function nextLevel() {
-            currentLevel++;
-            resetPlayerPosition();
-            setExitPosition();
-            updateEnemySpeed();
-            timeLeft = 30 - (currentLevel - 1) * 2;
-            timerDisplay.textContent = `Time: ${timeLeft}`;
+        function endGame() {
+            isGameOver = true;
+            gameOverDisplay.style.display = 'block';
+            restartBtn.style.display = 'block';
         }
 
-        function updateEnemySpeed() {
-            enemy.style.animationDuration = `${2 - currentLevel * 0.2}s`;
+        function restartGame() {
+            gameContainer.querySelectorAll('.pipe').forEach(pipe => pipe.remove());
+            startGame();
         }
 
-        function resetPlayerPosition() {
-            playerPosition = { top: 0, left: 0 };
-            updatePlayerPosition();
-        }
-
-        function endGame(message) {
-            clearInterval(interval);
-            document.removeEventListener('keydown', movePlayer);
-            result.textContent = message;
-            result.style.color = 'red';
-        }
+        startGame();
     </script>
 
 </body>
 </html>
-
