@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette Game</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            flex-direction: column;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .roulette-board {
+            display: grid;
+            grid-template-columns: repeat(12, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+        }
+
+        .number {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            background-color: #555;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .number.red {
+            background-color: #e74c3c;
+        }
+
+        .number.black {
+            background-color: #34495e;
+        }
+
+        .number:hover {
+            background-color: #f39c12;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5em;
+        }
+
+        .betting-area {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .betting-area input {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            width: 200px;
+            text-align: center;
+            border-radius: 5px;
+            border: none;
+        }
+
+        .betting-area button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .betting-area button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Roulette</h1>
+    <div class="roulette-board">
+        <!-- Numbers on the Roulette Board -->
+        <div class="number red" data-number="1">1</div>
+        <div class="number black" data-number="2">2</div>
+        <div class="number red" data-number="3">3</div>
+        <div class="number black" data-number="4">4</div>
+        <div class="number red" data-number="5">5</div>
+        <div class="number black" data-number="6">6</div>
+        <div class="number red" data-number="7">7</div>
+        <div class="number black" data-number="8">8</div>
+        <div class="number red" data-number="9">9</div>
+        <div class="number black" data-number="10">10</div>
+        <div class="number black" data-number="11">11</div>
+        <div class="number red" data-number="12">12</div>
+        <div class="number black" data-number="13">13</div>
+        <div class="number red" data-number="14">14</div>
+        <div class="number black" data-number="15">15</div>
+        <div class="number red" data-number="16">16</div>
+        <div class="number black" data-number="17">17</div>
+        <div class="number red" data-number="18">18</div>
+        <div class="number black" data-number="19">19</div>
+        <div class="number red" data-number="20">20</div>
+        <div class="number black" data-number="21">21</div>
+        <div class="number red" data-number="22">22</div>
+        <div class="number black" data-number="23">23</div>
+        <div class="number red" data-number="24">24</div>
+        <div class="number black" data-number="25">25</div>
+        <div class="number red" data-number="26">26</div>
+        <div class="number black" data-number="27">27</div>
+        <div class="number red" data-number="28">28</div>
+        <div class="number black" data-number="29">29</div>
+        <div class="number red" data-number="30">30</div>
+        <div class="number black" data-number="31">31</div>
+        <div class="number red" data-number="32">32</div>
+        <div class="number black" data-number="33">33</div>
+        <div class="number red" data-number="34">34</div>
+        <div class="number black" data-number="35">35</div>
+        <div class="number red" data-number="36">36</div>
+    </div>
+
+    <div class="betting-area">
+        <input type="number" id="betNumber" placeholder="Enter a number (1-36)">
+        <button onclick="placeBet()">Place Bet</button>
+    </div>
+
+    <div class="result" id="result"></div>
+
+    <script>
+        const numbers = Array.from(document.querySelectorAll('.number'));
+        let selectedNumber = null;
+
+        numbers.forEach(number => {
+            number.addEventListener('click', () => {
+                numbers.forEach(num => num.style.backgroundColor = num.classList.contains('red') ? '#e74c3c' : '#34495e');
+                number.style.backgroundColor = '#f39c12';
+                selectedNumber = parseInt(number.dataset.number);
+            });
+        });
+
+        function getRandomNumber() {
+            return Math.floor(Math.random() * 36) + 1;
+        }
+
+        function placeBet() {
+            const betNumber = parseInt(document.getElementById('betNumber').value);
+            if (isNaN(betNumber) || betNumber < 1 || betNumber > 36) {
+                alert('Please enter a valid number between 1 and 36.');
+                return;
+            }
+
+            const winningNumber = getRandomNumber();
+            document.getElementById('result').textContent = `The wheel spins... and the winning number is ${winningNumber}.`;
+
+            if (betNumber === winningNumber) {
+                document.getElementById('result').textContent += ` Congratulations! You win!`;
+            } else {
+                document.getElementById('result').textContent += ` Sorry, you lose.`;
+            }
+        }
+    </script>
+
+</body>
+</html>
