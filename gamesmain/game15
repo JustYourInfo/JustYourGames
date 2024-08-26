@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkers</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #333;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 0;
+            border: 2px solid #fff;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell:nth-child(even) {
+            background-color: #b58863;
+        }
+
+        .cell:nth-child(odd) {
+            background-color: #f0d9b5;
+        }
+
+        .piece {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .piece.red {
+            background-color: red;
+        }
+
+        .piece.black {
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Checkers</h1>
+    <div class="board" id="board">
+        <!-- Cells and pieces will be dynamically generated here -->
+    </div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        let board = Array.from({ length: 8 }, () => Array(8).fill(null));
+        let selectedPiece = null;
+        let currentPlayer = 'red';
+
+        function initializeBoard() {
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.addEventListener('click', handleCellClick);
+                    boardElement.appendChild(cell);
+
+                    if (row < 3 && (row + col) % 2 !== 0) {
+                        createPiece(cell, 'black');
+                    } else if (row > 4 && (row + col) % 2 !== 0) {
+                        createPiece(cell, 'red');
+                    }
+                }
+            }
+        }
+
+        function createPiece(cell, color) {
+            const piece = document.createElement('div');
+            piece.classList.add('piece', color);
+            piece.dataset.color = color;
+            piece.addEventListener('click', handlePieceClick);
+            cell.appendChild(piece);
+
+            const row = cell.dataset.row;
+            const col = cell.dataset.col;
+            board[row][col] = piece;
+        }
+
+        function handlePieceClick(event) {
+            if (event.target.dataset.color !== currentPlayer || currentPlayer !== 'red') return;
+            selectedPiece = event.target;
+        }
+
+        function handleCellClick(event) {
+            if (!selectedPiece) return;
+
+            const targetCell = event.target;
+            const targetRow = targetCell.dataset.row;
+            const targetCol = targetCell.dataset.col;
+
+            const pieceRow = selectedPiece.parentElement.dataset.row;
+            const pieceCol = selectedPiece.parentElement.dataset.col;
+
+            const rowDiff = targetRow - pieceRow;
+            const colDiff = targetCol - pieceCol;
+
+            if (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 1 && !board[targetRow][targetCol]) {
+                movePiece(targetCell);
+                switchPlayer();
+            } else if (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 2) {
+                const middleRow = (parseInt(pieceRow) + parseInt(targetRow)) / 2;
+                const middleCol = (parseInt(pieceCol) + parseInt(targetCol)) / 2;
+
+                if (board[middleRow][middleCol] && board[middleRow][middleCol].dataset.color !== currentPlayer) {
+                    capturePiece(middleRow, middleCol);
+                    movePiece(targetCell);
+                    switchPlayer();
+                }
+            }
+        }
+
+        function movePiece(targetCell) {
+            const targetRow = targetCell.dataset.row;
+            const targetCol = targetCell.dataset.col;
+
+            const pieceRow = selectedPiece.parentElement.dataset.row;
+            const pieceCol = selectedPiece.parentElement.dataset.col;
+
+            board[pieceRow][pieceCol] = null;
+            targetCell.appendChild(selectedPiece);
+            board[targetRow][targetCol] = selectedPiece;
+
+            selectedPiece = null;
+        }
+
+        function capturePiece(row, col) {
+            const piece = board[row][col];
+            piece.parentElement.removeChild(piece);
+            board[row][col] = null;
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'red' ? 'black' : 'red';
+            if (currentPlayer === 'black') {
+                setTimeout(computerMove, 500);
+            }
+        }
+
+        function computerMove() {
+            let possibleMoves = [];
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const piece = board[row][col];
+                    if (piece && piece.dataset.color === 'black') {
+                        const moves = getValidMoves(row, col);
+                        if (moves.length > 0) {
+                            possibleMoves.push({ piece, row, col, moves });
+                        }
+                    }
+                }
+            }
+
+            if (possibleMoves.length > 0) {
+                const move = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                const target = move.moves[Math.floor(Math.random() * move.moves.length)];
+
+                selectedPiece = move.piece;
+                movePiece(boardElement.querySelector(`[data-row="${target.row}"][data-col="${target.col}"]`));
+
+                if (Math.abs(target.row - move.row) === 2) {
+                    const middleRow = (move.row + target.row) / 2;
+                    const middleCol = (move.col + target.col) / 2;
+                    capturePiece(middleRow, middleCol);
+                }
+
+                switchPlayer();
+            }
+        }
+
+        function getValidMoves(row, col) {
+            const validMoves = [];
+            const directions = [[1, -1], [1, 1], [-1, -1], [-1, 1]];
+
+            for (const [dRow, dCol] of directions) {
+                const newRow = row + dRow;
+                const newCol = col + dCol;
+
+                if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                    if (!board[newRow][newCol]) {
+                        validMoves.push({ row: newRow, col: newCol });
+                    } else if (board[newRow][newCol].dataset.color === 'red') {
+                        const jumpRow = newRow + dRow;
+                        const jumpCol = newCol + dCol;
+
+                        if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8 && !board[jumpRow][jumpCol]) {
+                            validMoves.push({ row: jumpRow, col: jumpCol });
+                        }
+                    }
+                }
+            }
+
+            return validMoves;
+        }
+
+        initializeBoard();
+    </script>
+
+</body>
+</html>
