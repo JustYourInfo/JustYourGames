@@ -10,7 +10,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #333;
+            background-color: #222;
             margin: 0;
             font-family: Arial, sans-serif;
         }
@@ -18,26 +18,36 @@
         canvas {
             background-color: #000;
             border: 2px solid #fff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
         }
 
         .score {
             color: white;
-            font-size: 1.5em;
+            font-size: 2em;
             position: absolute;
             top: 20px;
             left: 20px;
+        }
+
+        .game-over {
+            position: absolute;
+            color: #ff4c4c;
+            font-size: 2.5em;
+            display: none;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
         }
     </style>
 </head>
 <body>
 
     <div class="score" id="score">Score: 0</div>
+    <div class="game-over" id="gameOver">Game Over</div>
     <canvas id="tetrisCanvas" width="300" height="600"></canvas>
 
     <script>
         const canvas = document.getElementById('tetrisCanvas');
         const ctx = canvas.getContext('2d');
-        const grid = 20;
+        const grid = 30;  // Adjusted for better visual experience
         const tetrominoes = [
             [ [1, 1, 1, 1] ],                  // I
             [ [1, 1], [1, 1] ],                // O
@@ -52,6 +62,7 @@
         let position = { x: 4, y: 0 };
         let board = Array.from({ length: canvas.height / grid }, () => Array(canvas.width / grid).fill(0));
         let score = 0;
+        let isGameOver = false;
 
         function getRandomTetromino() {
             const rand = Math.floor(Math.random() * tetrominoes.length);
@@ -63,7 +74,7 @@
             tetromino.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value) {
-                        ctx.fillRect((position.x + x) * grid, (position.y + y) * grid, grid, grid);
+                        ctx.fillRect((position.x + x) * grid, (position.y + y) * grid, grid - 2, grid - 2);
                     }
                 });
             });
@@ -75,7 +86,7 @@
                 row.forEach((value, x) => {
                     if (value) {
                         ctx.fillStyle = 'cyan';
-                        ctx.fillRect(x * grid, y * grid, grid, grid);
+                        ctx.fillRect(x * grid, y * grid, grid - 2, grid - 2);
                     }
                 });
             });
@@ -97,8 +108,7 @@
                 position = { x: 4, y: 0 };
                 currentTetromino = getRandomTetromino();
                 if (checkCollision()) {
-                    alert('Game Over');
-                    resetGame();
+                    endGame();
                 }
             }
         }
@@ -115,7 +125,8 @@
             return currentTetromino.some((row, y) =>
                 row.some((value, x) =>
                     value && (
-                        board[y + position.y] && board[y + position.y][x + position.x]) !== 0
+                        board[y + position.y] &&
+                        board[y + position.y][x + position.x]) !== 0
                 )
             );
         }
@@ -134,7 +145,7 @@
             board = board.reduce((acc, row) => {
                 if (row.every(cell => cell !== 0)) {
                     acc.unshift(Array(board[0].length).fill(0));
-                    score += 10;
+                    score += 100;  // Increased score per row cleared
                     document.getElementById('score').textContent = `Score: ${score}`;
                 } else {
                     acc.push(row);
@@ -147,9 +158,20 @@
             board = Array.from({ length: canvas.height / grid }, () => Array(canvas.width / grid).fill(0));
             score = 0;
             document.getElementById('score').textContent = `Score: ${score}`;
+            document.getElementById('gameOver').style.display = 'none';
+            isGameOver = false;
+        }
+
+        function endGame() {
+            isGameOver = true;
+            document.getElementById('gameOver').style.display = 'block';
+            setTimeout(() => {
+                resetGame();
+            }, 3000);  // Reset the game after 3 seconds
         }
 
         document.addEventListener('keydown', event => {
+            if (isGameOver) return;
             if (event.key === 'ArrowLeft') {
                 moveTetromino(-1);
             } else if (event.key === 'ArrowRight') {
@@ -164,6 +186,7 @@
         });
 
         function gameLoop() {
+            if (isGameOver) return;
             drawBoard();
             drawTetromino(currentTetromino, position);
             dropTetromino();
