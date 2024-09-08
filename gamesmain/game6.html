@@ -78,12 +78,13 @@
         const scoreDisplay = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
 
-        let playerPosition = { left: gameContainer.clientWidth / 2 - 30, bottom: 10 };
+        let playerPosition = { left: gameContainer.clientWidth / 2 - player.clientWidth / 2, bottom: 10 };
         let fallingObjects = [];
         let score = 0;
         let level = 1;
         let fallingSpeed = 2;
         let fallingFrequency = 0.02;
+        const scoreDecrement = 5; // Decrease score by 5 for a missed object
 
         document.addEventListener('keydown', handleKeyDown);
 
@@ -125,9 +126,9 @@
                 if (parseInt(fallingObject.style.top) > gameContainer.clientHeight) {
                     fallingObject.remove();
                     fallingObjects.splice(index, 1);
-                    score -= 5; // Decrease score when object misses the player
+                    score -= scoreDecrement; // Use variable for score decrement
                     if (score < 0) score = 0; // Ensure score does not go below zero
-                    updateScore(); // Update score display
+                    updateScore();
                 } else if (isCollision(player, fallingObject)) {
                     endGame(); // End game on collision
                 }
@@ -154,7 +155,7 @@
         function levelUp() {
             level++;
             fallingSpeed += 0.5;
-            fallingFrequency -= 0.005;
+            fallingFrequency = Math.max(0.005, fallingFrequency - 0.005); // Cap frequency to prevent too fast spawns
             levelDisplay.textContent = `Level: ${level}`;
         }
 
