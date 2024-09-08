@@ -9,6 +9,8 @@
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #ecf0f1;
+            margin: 0;
+            padding: 0;
         }
         .game-container {
             margin: 50px auto;
@@ -20,8 +22,8 @@
             overflow: hidden;
         }
         .player {
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             background-color: #3498db;
             position: absolute;
             bottom: 10px;
@@ -61,6 +63,7 @@
     </style>
 </head>
 <body>
+
     <h1>Dodge the Falling Objects</h1>
     <div class="game-container" id="game-container">
         <div class="player" id="player"></div>
@@ -75,19 +78,16 @@
         const scoreDisplay = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
 
-        let playerPosition = { left: gameContainer.clientWidth / 2 - 20, bottom: 10 };
+        let playerPosition = { left: gameContainer.clientWidth / 2 - 30, bottom: 10 };
         let fallingObjects = [];
         let score = 0;
         let level = 1;
         let fallingSpeed = 2;
         let fallingFrequency = 0.02;
-        let isGameOver = false;
 
         document.addEventListener('keydown', handleKeyDown);
 
         function handleKeyDown(event) {
-            if (isGameOver) return;
-
             const key = event.key;
             if (key === 'ArrowLeft' || key === 'a') {
                 movePlayer(-20);
@@ -125,29 +125,28 @@
                 if (parseInt(fallingObject.style.top) > gameContainer.clientHeight) {
                     fallingObject.remove();
                     fallingObjects.splice(index, 1);
-                    score -= 5; // Penalty for missing falling object
-                    score = Math.max(score, 0); // Prevent negative score
-                    scoreDisplay.textContent = `Score: ${score}`;
+                    score -= 5; // Decrease score when object misses the player
+                    if (score < 0) score = 0; // Ensure score does not go below zero
+                    updateScore(); // Update score display
                 } else if (isCollision(player, fallingObject)) {
-                    endGame();
+                    endGame(); // End game on collision
                 }
             });
         }
 
-        function isCollision(element1, element2) {
-            const rect1 = element1.getBoundingClientRect();
-            const rect2 = element2.getBoundingClientRect();
+        function isCollision(player, fallingObject) {
+            const playerRect = player.getBoundingClientRect();
+            const objectRect = fallingObject.getBoundingClientRect();
 
             return (
-                rect1.left < rect2.left + rect2.width &&
-                rect1.left + rect1.width > rect2.left &&
-                rect1.top < rect2.top + rect2.height &&
-                rect1.height + rect1.top > rect2.top
+                playerRect.left < objectRect.left + objectRect.width &&
+                playerRect.left + playerRect.width > objectRect.left &&
+                playerRect.top < objectRect.top + objectRect.height &&
+                playerRect.height + playerRect.top > objectRect.top
             );
         }
 
         function endGame() {
-            isGameOver = true;
             alert('Game Over! Final Score: ' + score);
             window.location.reload();
         }
@@ -159,16 +158,18 @@
             levelDisplay.textContent = `Level: ${level}`;
         }
 
-        function gameLoop() {
-            if (isGameOver) return;
+        function updateScore() {
+            scoreDisplay.textContent = `Score: ${score}`;
+        }
 
+        function gameLoop() {
             updateFallingObjects();
 
             if (Math.random() < fallingFrequency) {
                 createFallingObject();
             }
 
-            if (score >= level * 100) {
+            if (score > level * 100) {
                 levelUp();
             }
 
@@ -177,5 +178,6 @@
 
         gameLoop();
     </script>
+
 </body>
 </html>
