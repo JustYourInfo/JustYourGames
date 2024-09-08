@@ -28,6 +28,7 @@
             left: 50%;
             transform: translateX(-50%);
             border-radius: 50%;
+            transition: transform 0.2s;
         }
         .bullet {
             width: 5px;
@@ -75,6 +76,9 @@
         .back-link:hover {
             text-decoration: underline;
         }
+        .hit {
+            transform: translateY(20px); /* Simulates the player dropping down */
+        }
     </style>
 </head>
 <body>
@@ -105,10 +109,13 @@
         let level = 1;
         let enemySpeed = 2;
         let enemyFrequency = 0.02;
+        let isGameOver = false;
 
         document.addEventListener('keydown', handleKeyDown);
 
         function handleKeyDown(event) {
+            if (isGameOver) return;
+
             const key = event.key;
             if (key === 'ArrowLeft' || key === 'a') {
                 movePlayer(-20);
@@ -186,23 +193,35 @@
                     if (health <= 0) {
                         endGame();
                     }
+                } else if (isCollision(player, enemy)) {
+                    // Simulate player being hit
+                    player.classList.add('hit');
+                    setTimeout(() => player.classList.remove('hit'), 200); // Remove hit effect after 200ms
+                    health -= 20;
+                    healthDisplay.textContent = `Health: ${health}%`;
+                    enemy.remove();
+                    enemies.splice(index, 1);
+                    if (health <= 0) {
+                        endGame();
+                    }
                 }
             });
         }
 
-        function isCollision(bullet, enemy) {
-            const bulletRect = bullet.getBoundingClientRect();
-            const enemyRect = enemy.getBoundingClientRect();
+        function isCollision(element1, element2) {
+            const rect1 = element1.getBoundingClientRect();
+            const rect2 = element2.getBoundingClientRect();
 
             return (
-                bulletRect.left < enemyRect.left + enemyRect.width &&
-                bulletRect.left + bulletRect.width > enemyRect.left &&
-                bulletRect.top < enemyRect.top + enemyRect.height &&
-                bulletRect.height + bulletRect.top > enemyRect.top
+                rect1.left < rect2.left + rect2.width &&
+                rect1.left + rect1.width > rect2.left &&
+                rect1.top < rect2.top + rect2.height &&
+                rect1.height + rect1.top > rect2.top
             );
         }
 
         function endGame() {
+            isGameOver = true;
             alert('Game Over! Final Score: ' + score);
             window.location.reload();
         }
@@ -215,6 +234,8 @@
         }
 
         function gameLoop() {
+            if (isGameOver) return;
+
             updateBullets();
             updateEnemies();
 
