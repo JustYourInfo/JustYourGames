@@ -84,7 +84,7 @@
         let level = 1;
         let fallingSpeed = 2;
         let fallingFrequency = 0.02;
-        const scoreDecrement = 5; // Decrease score by 5 for a missed object
+        const scoreIncrement = 10; // Score increment for successfully dodging an object
 
         document.addEventListener('keydown', handleKeyDown);
 
@@ -126,8 +126,7 @@
                 if (parseInt(fallingObject.style.top) > gameContainer.clientHeight) {
                     fallingObject.remove();
                     fallingObjects.splice(index, 1);
-                    score -= scoreDecrement; // Use variable for score decrement
-                    if (score < 0) score = 0; // Ensure score does not go below zero
+                    score += scoreIncrement; // Increment score when player dodges an object
                     updateScore();
                 } else if (isCollision(player, fallingObject)) {
                     endGame(); // End game on collision
