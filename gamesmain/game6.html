@@ -126,7 +126,8 @@
                     fallingObject.remove();
                     fallingObjects.splice(index, 1);
                     score -= 5; // Penalty for missing falling object
-                    scoreDisplay.textContent = `Score: ${Math.max(score, 0)}`;
+                    score = Math.max(score, 0); // Prevent negative score
+                    scoreDisplay.textContent = `Score: ${score}`;
                 } else if (isCollision(player, fallingObject)) {
                     endGame();
                 }
@@ -167,7 +168,7 @@
                 createFallingObject();
             }
 
-            if (score > level * 100) {
+            if (score >= level * 100) {
                 levelUp();
             }
 
