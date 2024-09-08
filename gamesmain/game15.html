@@ -41,6 +41,14 @@
             background-color: #f0d9b5;
         }
 
+        .cell:nth-child(8n + 1) {
+            background-color: #b58863;
+        }
+
+        .cell:nth-child(8n) {
+            background-color: #f0d9b5;
+        }
+
         .piece {
             width: 50px;
             height: 50px;
@@ -49,6 +57,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            position: relative;
         }
 
         .piece.red {
@@ -57,6 +66,21 @@
 
         .piece.black {
             background-color: black;
+        }
+
+        .piece.king::after {
+            content: "K";
+            color: gold;
+            font-weight: bold;
+            font-size: 20px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .selected {
+            border: 2px solid yellow;
         }
     </style>
 </head>
@@ -83,10 +107,9 @@
                     cell.addEventListener('click', handleCellClick);
                     boardElement.appendChild(cell);
 
-                    if (row < 3 && (row + col) % 2 !== 0) {
-                        createPiece(cell, 'black');
-                    } else if (row > 4 && (row + col) % 2 !== 0) {
-                        createPiece(cell, 'red');
+                    if ((row + col) % 2 !== 0) {
+                        if (row < 3) createPiece(cell, 'black');
+                        if (row > 4) createPiece(cell, 'red');
                     }
                 }
             }
@@ -96,6 +119,7 @@
             const piece = document.createElement('div');
             piece.classList.add('piece', color);
             piece.dataset.color = color;
+            piece.dataset.king = 'false'; // Initially not a king
             piece.addEventListener('click', handlePieceClick);
             cell.appendChild(piece);
 
@@ -105,8 +129,19 @@
         }
 
         function handlePieceClick(event) {
-            if (event.target.dataset.color !== currentPlayer || currentPlayer !== 'red') return;
+            if (currentPlayer !== event.target.dataset.color) return;
+            if (selectedPiece === event.target) {
+                selectedPiece = null;
+                event.target.classList.remove('selected');
+                return;
+            }
+
+            if (selectedPiece) {
+                selectedPiece.classList.remove('selected');
+            }
+
             selectedPiece = event.target;
+            selectedPiece.classList.add('selected');
         }
 
         function handleCellClick(event) {
@@ -124,6 +159,7 @@
 
             if (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 1 && !board[targetRow][targetCol]) {
                 movePiece(targetCell);
+                promotePiece(targetCell);
                 switchPlayer();
             } else if (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 2) {
                 const middleRow = (parseInt(pieceRow) + parseInt(targetRow)) / 2;
@@ -132,6 +168,7 @@
                 if (board[middleRow][middleCol] && board[middleRow][middleCol].dataset.color !== currentPlayer) {
                     capturePiece(middleRow, middleCol);
                     movePiece(targetCell);
+                    promotePiece(targetCell);
                     switchPlayer();
                 }
             }
@@ -148,7 +185,19 @@
             targetCell.appendChild(selectedPiece);
             board[targetRow][targetCol] = selectedPiece;
 
+            selectedPiece.classList.remove('selected');
             selectedPiece = null;
+        }
+
+        function promotePiece(targetCell) {
+            const piece = targetCell.querySelector('.piece');
+            if (piece) {
+                const color = piece.dataset.color;
+                if ((color === 'red' && targetCell.dataset.row == 0) || (color === 'black' && targetCell.dataset.row == 7)) {
+                    piece.classList.add('king');
+                    piece.dataset.king = 'true';
+                }
+            }
         }
 
         function capturePiece(row, col) {
@@ -192,6 +241,8 @@
                     capturePiece(middleRow, middleCol);
                 }
 
+                promotePiece(boardElement.querySelector(`[data-row="${target.row}"][data-col="${target.col}"]`));
+
                 switchPlayer();
             }
         }
@@ -199,6 +250,8 @@
         function getValidMoves(row, col) {
             const validMoves = [];
             const directions = [[1, -1], [1, 1], [-1, -1], [-1, 1]];
+            const piece = board[row][col];
+            const isKing = piece && piece.dataset.king === 'true';
 
             for (const [dRow, dCol] of directions) {
                 const newRow = row + dRow;
@@ -207,7 +260,7 @@
                 if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
                     if (!board[newRow][newCol]) {
                         validMoves.push({ row: newRow, col: newCol });
-                    } else if (board[newRow][newCol].dataset.color === 'red') {
+                    } else if (board[newRow][newCol].dataset.color !== piece.dataset.color) {
                         const jumpRow = newRow + dRow;
                         const jumpCol = newCol + dCol;
 
@@ -218,12 +271,36 @@
                 }
             }
 
+            if (isKing) {
+                for (const [dRow, dCol] of directions) {
+                    let newRow = row + dRow;
+                    let newCol = col + dCol;
+
+                    while (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8) {
+                        if (!board[newRow][newCol]) {
+                            validMoves.push({ row: newRow, col: newCol });
+                        } else if (board[newRow][newCol].dataset.color !== piece.dataset.color) {
+                            const jumpRow = newRow + dRow;
+                            const jumpCol = newCol + dCol;
+
+                            if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8 && !board[jumpRow][jumpCol]) {
+                                validMoves.push({ row: jumpRow, col: jumpCol });
+                            }
+                            break;
+                        } else {
+                            break;
+                        }
+
+                        newRow += dRow;
+                        newCol += dCol;
+                    }
+                }
+            }
+
             return validMoves;
         }
 
         initializeBoard();
     </script>
-<p>
-
 </body>
 </html>
