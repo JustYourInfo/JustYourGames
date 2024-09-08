@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game 6 - The Simple Shooting Game</title>
+    <title>Dodge the Falling Objects</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -28,39 +28,21 @@
             left: 50%;
             transform: translateX(-50%);
             border-radius: 50%;
-            transition: transform 0.2s;
         }
-        .bullet {
-            width: 5px;
-            height: 10px;
-            background-color: #e74c3c;
-            position: absolute;
-            border-radius: 2px;
-        }
-        .enemy {
+        .falling-object {
             width: 40px;
             height: 40px;
-            background-color: #2ecc71;
+            background-color: #e74c3c;
             position: absolute;
             border-radius: 50%;
-            animation: moveEnemy 4s linear infinite;
         }
-        @keyframes moveEnemy {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(200px); }
-            100% { transform: translateX(0); }
-        }
-        .score, .health, .level {
+        .score, .level {
             margin-top: 20px;
             font-size: 1.5em;
         }
         .score {
             display: inline-block;
             margin-right: 10px;
-        }
-        .health {
-            display: inline-block;
-            color: #e74c3c;
         }
         .level {
             display: inline-block;
@@ -76,18 +58,14 @@
         .back-link:hover {
             text-decoration: underline;
         }
-        .hit {
-            transform: translateY(20px); /* Simulates the player dropping down */
-        }
     </style>
 </head>
 <body>
-    <h1>The Simple Shooting Game</h1>
+    <h1>Dodge the Falling Objects</h1>
     <div class="game-container" id="game-container">
         <div class="player" id="player"></div>
     </div>
     <div class="score" id="score">Score: 0</div>
-    <div class="health" id="health">Health: 100%</div>
     <div class="level" id="level">Level: 1</div>
     <a href="../index.html" class="back-link">Back to Game Hub</a>
 
@@ -95,20 +73,14 @@
         const gameContainer = document.getElementById('game-container');
         const player = document.getElementById('player');
         const scoreDisplay = document.getElementById('score');
-        const healthDisplay = document.getElementById('health');
         const levelDisplay = document.getElementById('level');
 
-        const shootSound = new Audio('shoot.mp3');
-        const collisionSound = new Audio('collision.mp3');
-
         let playerPosition = { left: gameContainer.clientWidth / 2 - 20, bottom: 10 };
-        let bullets = [];
-        let enemies = [];
+        let fallingObjects = [];
         let score = 0;
-        let health = 100;
         let level = 1;
-        let enemySpeed = 2;
-        let enemyFrequency = 0.02;
+        let fallingSpeed = 2;
+        let fallingFrequency = 0.02;
         let isGameOver = false;
 
         document.addEventListener('keydown', handleKeyDown);
@@ -121,8 +93,6 @@
                 movePlayer(-20);
             } else if (key === 'ArrowRight' || key === 'd') {
                 movePlayer(20);
-            } else if (key === ' ') {
-                shoot();
             }
         }
 
@@ -139,71 +109,26 @@
             player.style.left = `${playerPosition.left}px`;
         }
 
-        function shoot() {
-            shootSound.play();
-            const bullet = document.createElement('div');
-            bullet.classList.add('bullet');
-            bullet.style.left = `${playerPosition.left + player.clientWidth / 2 - 2.5}px`;
-            bullet.style.bottom = `${playerPosition.bottom + 40}px`;
-            gameContainer.appendChild(bullet);
-            bullets.push(bullet);
-        }
-
-        function createEnemy() {
-            const enemy = document.createElement('div');
-            enemy.classList.add('enemy');
+        function createFallingObject() {
+            const fallingObject = document.createElement('div');
+            fallingObject.classList.add('falling-object');
             const randomLeft = Math.floor(Math.random() * (gameContainer.clientWidth - 40));
-            enemy.style.left = `${randomLeft}px`;
-            enemy.style.top = `-40px`;
-            enemy.style.animationDuration = `${4 - level * 0.5}s`; // Increase speed with level
-            gameContainer.appendChild(enemy);
-            enemies.push(enemy);
+            fallingObject.style.left = `${randomLeft}px`;
+            fallingObject.style.top = `-40px`;
+            gameContainer.appendChild(fallingObject);
+            fallingObjects.push(fallingObject);
         }
 
-        function updateBullets() {
-            bullets.forEach((bullet, index) => {
-                bullet.style.bottom = `${parseInt(bullet.style.bottom) + 10}px`;
-                if (parseInt(bullet.style.bottom) > gameContainer.clientHeight) {
-                    bullet.remove();
-                    bullets.splice(index, 1);
-                } else {
-                    enemies.forEach((enemy, enemyIndex) => {
-                        if (isCollision(bullet, enemy)) {
-                            collisionSound.play();
-                            score += 10;
-                            scoreDisplay.textContent = `Score: ${score}`;
-                            bullet.remove();
-                            enemy.remove();
-                            bullets.splice(index, 1);
-                            enemies.splice(enemyIndex, 1);
-                        }
-                    });
-                }
-            });
-        }
-
-        function updateEnemies() {
-            enemies.forEach((enemy, index) => {
-                enemy.style.top = `${parseInt(enemy.style.top) + enemySpeed}px`;
-                if (parseInt(enemy.style.top) > gameContainer.clientHeight) {
-                    enemy.remove();
-                    enemies.splice(index, 1);
-                    health -= 20;
-                    healthDisplay.textContent = `Health: ${health}%`;
-                    if (health <= 0) {
-                        endGame();
-                    }
-                } else if (isCollision(player, enemy)) {
-                    // Simulate player being hit
-                    player.classList.add('hit');
-                    setTimeout(() => player.classList.remove('hit'), 200); // Remove hit effect after 200ms
-                    health -= 20;
-                    healthDisplay.textContent = `Health: ${health}%`;
-                    enemy.remove();
-                    enemies.splice(index, 1);
-                    if (health <= 0) {
-                        endGame();
-                    }
+        function updateFallingObjects() {
+            fallingObjects.forEach((fallingObject, index) => {
+                fallingObject.style.top = `${parseInt(fallingObject.style.top) + fallingSpeed}px`;
+                if (parseInt(fallingObject.style.top) > gameContainer.clientHeight) {
+                    fallingObject.remove();
+                    fallingObjects.splice(index, 1);
+                    score -= 5; // Penalty for missing falling object
+                    scoreDisplay.textContent = `Score: ${Math.max(score, 0)}`;
+                } else if (isCollision(player, fallingObject)) {
+                    endGame();
                 }
             });
         }
@@ -228,19 +153,18 @@
 
         function levelUp() {
             level++;
-            enemySpeed += 0.5;
-            enemyFrequency -= 0.005;
+            fallingSpeed += 0.5;
+            fallingFrequency -= 0.005;
             levelDisplay.textContent = `Level: ${level}`;
         }
 
         function gameLoop() {
             if (isGameOver) return;
 
-            updateBullets();
-            updateEnemies();
+            updateFallingObjects();
 
-            if (Math.random() < enemyFrequency) {
-                createEnemy();
+            if (Math.random() < fallingFrequency) {
+                createFallingObject();
             }
 
             if (score > level * 100) {
